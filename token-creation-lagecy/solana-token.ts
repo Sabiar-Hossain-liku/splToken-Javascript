@@ -1,16 +1,19 @@
-
-
-import { createSolanaClient, createTransaction, signTransactionMessageWithSigners } from "gill";
+import { createSolanaClient, createTransaction, getExplorerLink, type SolanaClusterMoniker } from "gill";
 import {loadKeypairSignerFromFile} from "gill/node";
 import { getAddMemoInstruction } from "gill/programs";
+
+// For Debuging
+global.__GILL_DEBUG_LEVEL__ ="debug";
+
 
 const signer = await loadKeypairSignerFromFile()
 console.log("signer:", signer.address);
 
+const cluster: SolanaClusterMoniker = "devnet";
 
 // Create Solana client with devnet connection
-const {rpc} = createSolanaClient({
-    urlOrMoniker: "https://api.devnet.solana.com"
+const {rpc, sendAndConfirmTransaction} = createSolanaClient({
+    urlOrMoniker: cluster
 })
 
 const memoIx = getAddMemoInstruction({
@@ -33,8 +36,20 @@ try {
     console.log("Transaction: ", tx);
 
 
-    const signedTrasaction = await signTransactionMessageWithSigners(tx)
-    console.log("signedTransaction:", signedTrasaction)
+    // Send and confirm the transaction to the network
+    console.log("Sending transaction to devnet...");
+    const signature = await sendAndConfirmTransaction(tx);
+    console.log("Transaction confirmed!");
+    console.log("Signature:", signature);
+
+    console.log("\nExplorer link:");
+    console.log(getExplorerLink({
+        cluster,
+        transaction: signature
+    }))
+    
+
+
 
 } catch (error) {
     console.error("Failed to fetch blockhash:", error);
